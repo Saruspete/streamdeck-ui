@@ -1,6 +1,7 @@
 """Defines the Python API for interacting with the StreamDeck Configuration UI"""
 import json
 import os
+from pathlib import Path
 import threading
 from functools import partial
 import shlex
@@ -28,7 +29,11 @@ def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, s
 
         command = get_button_command(deck_id, page, key)
         if command:
-            Popen(shlex.split(command))
+            try:
+                Popen(shlex.split(command),cwd=Path.home())
+            except:
+                print('Command not found: ' + command)
+                pass
 
         keys = get_button_keys(deck_id, page, key)
         if keys:
