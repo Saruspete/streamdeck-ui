@@ -21,10 +21,10 @@ image_cache: Dict[str, memoryview] = {}
 decks: Dict[str, StreamDeck.StreamDeck] = {}
 state: Dict[str, Dict[str, Union[int, Dict[int, Dict[int, Dict[str, str]]]]]] = {}
 
+keyboard = Controller()
 
 def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, state: bool) -> None:
     if state:
-        keyboard = Controller()
         page = get_page(deck_id)
 
         command = get_button_command(deck_id, page, key)
