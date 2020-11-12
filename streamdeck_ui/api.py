@@ -1,5 +1,7 @@
 """Defines the Python API for interacting with the StreamDeck Configuration UI"""
 import json
+import traceback
+import sys
 import os
 from pathlib import Path
 import threading
@@ -38,16 +40,25 @@ def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, s
         keys = get_button_keys(deck_id, page, key)
         if keys:
             keys = keys.strip().replace(" ", "")
-            try:
-                for section in keys.split(","):
+            for section in keys.split(","):
+                pressed_keys = []
+                try:
                     for key_name in section.split("+"):
-                        k = getattr(Key, key_name.lower(), key_name)
-                        keyboard.press(k)
-                    for key_name in section.split("+"):
-                        k = getattr(Key, key_name.lower(), key_name)
-                        keyboard.release(k)
-            except:
-                print("Bad Hotkey:", k)
+                        keycode = getattr(Key, key_name.lower(), key_name)
+                        keyboard.press(keycode)
+                        pressed_keys.append(key_name)
+                except Exception:
+                    try:
+                        exc_info = sys.exc_info()
+                        print("An exception '{}' occured during Key press of {} (keycode: {})".format(exc_info[0], key_name, keycode))
+                        traceback.print_exception(*exc_info)
+                        del exc_info
+                        pass
+                    except:
+                        pass
+                finally:
+                    for key_name in pressed_keys:
+                        keyboard.release(getattr(Key, key_name.lower(), key_name))
 
         write = get_button_write(deck_id, page, key)
         if write:
