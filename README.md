@@ -48,17 +48,20 @@ If you're using GNOME shell, you might need to manually install an extension tha
 
 To use streamdeck_ui without root permissions, you have to give your user full access to the device.
 
-Add your user to the 'plugdev' group:
+Add your user to the 'plugdev' group if not already present
 ```bash
-sudo usermod -a -G plugdev `whoami`
+if [[ -z "$(id | tr ',' '\n'| grep -F '(plugdev)')" ]]; then
+	sudo usermod -a -G plugdev `whoami`
+	echo "You must restart your session for the changes to be effective"
+fi
 ```
 Add the udev rules using your text editor:
 ```bash
 sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="660", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="660", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="660", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="660", GROUP="plugdev"
 EOF
 ```
 Reload the rules:
