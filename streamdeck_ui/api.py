@@ -236,6 +236,7 @@ def _set_button_live_info(deck_id: str, page: int, button: int, start: bool, fun
 
 def set_button_live_time(deck_id: str, page: int, button: int, start: bool) -> None:
     """Set the button to display live time every second"""
+    _button_state(deck_id, page, button)["font_size"] = 14
     _set_button_live_info(deck_id, page, button, start, _get_current_time, ["%H:%M:%S"])
 
 
