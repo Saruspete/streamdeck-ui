@@ -1,6 +1,5 @@
 """Defines the Python API for interacting with the StreamDeck Configuration UI"""
 import json
-import traceback
 import sys
 import os
 from pathlib import Path
