@@ -47,12 +47,10 @@ def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, s
                         keycode = getattr(Key, key_name.lower(), key_name)
                         keyboard.press(keycode)
                         pressed_keys.append(key_name)
-                except Exception:
+                except Exception as e:
                     try:
-                        exc_info = sys.exc_info()
-                        print("An exception '{}' occured during Key press of {} (keycode: {})".format(exc_info[0], key_name, keycode))
-                        traceback.print_exception(*exc_info)
-                        del exc_info
+                        print("An exception '{}' occured during Key press of {} (keycode: {}): {}"
+                            .format(sys.exc_info()[0], key_name, keycode, getattr(e, "message", e)))
                         pass
                     except:
                         pass
