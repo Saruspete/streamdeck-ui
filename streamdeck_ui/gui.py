@@ -275,13 +275,13 @@ def start(_exit: bool = False) -> None:
 
     items = api.open_decks().items()
     print("wait for device(s)")
-    
+
     while len(items) == 0:
         time.sleep(3)
         items = api.open_decks().items()
-    
-    print("found " + str(len(items)))
-    
+
+    print("found " + str(len(items)) + ": " + ",".join(str(i) for i in list(items)) )
+
     for deck_id, deck in items:
         ui.device_list.addItem(f"{deck['type']} - {deck_id}", userData=deck_id)
 
@@ -302,7 +302,7 @@ def start(_exit: bool = False) -> None:
     tray.show()
     if first_start:
         main_window.show()
-    
+
     if _exit:
         return
     else:
