@@ -5,8 +5,7 @@ import os
 from pathlib import Path
 import threading
 from functools import partial
-import shlex
-from subprocess import Popen  # nosec - Need to allow users to specify arbitrary commands
+import shlex, subprocess
 from typing import Dict, List, Tuple, Union
 from warnings import warn
 
@@ -25,19 +24,43 @@ state: Dict[str, Dict[str, Union[int, Dict[int, Dict[int, Dict[str, str]]]]]] = 
 keyboard = Controller()
 live_functions: List = []
 
+def _run_process(command: str):
+    """ Implement a double-fork to detach process"""
+
+    pid = os.fork()
+    if pid > 0:
+        return
+
+    os.setsid()
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit from second parent, without atexit
+            os._exit(0)
+    except OSError as e:
+        print ("fork #2 failed: %d (%s)".format(e.errno, e.strerror))
+        os._exit(1)
+
+    # Detach the process, so killing StreamDeck doesn't take it with
+    args = shlex.split(command)
+    os.execv(args[0], args)
 
 def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, state: bool) -> None:
     if state:
         page = get_page(deck_id)
 
+        # Command running
         command = get_button_command(deck_id, page, key)
         if command:
             try:
-                Popen(shlex.split(command),cwd=Path.home())
-            except:
-                print('Command not found: ' + command)
+                #subprocess.Popen(shlex.split(command),cwd=Path.home())
+                _run_process(command)
+            except Exception as e:
+                print('Cannot exec command "{}" Exception: {} {}'.format(command, sys.exc_info()[0], getattr(e, "message", e) ))
                 pass
 
+        # Key press emulation
         keys = get_button_keys(deck_id, page, key)
         if keys:
             keys = keys.strip().replace(" ", "")
@@ -59,14 +82,17 @@ def _key_change_callback(deck_id: str, _deck: StreamDeck.StreamDeck, key: int, s
                     for key_name in pressed_keys:
                         keyboard.release(getattr(Key, key_name.lower(), key_name))
 
+        # Text writing
         write = get_button_write(deck_id, page, key)
         if write:
             keyboard.type(write)
 
+        # Brightness
         brightness_change = get_button_change_brightness(deck_id, page, key)
         if brightness_change:
             change_brightness(deck_id, brightness_change)
 
+        # Page switch
         switch_page = get_button_switch_page(deck_id, page, key)
         if switch_page:
             set_page(deck_id, switch_page - 1)
