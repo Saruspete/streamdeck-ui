@@ -132,7 +132,8 @@ def set_information(ui, index: int, button=None, build: bool=False) -> None:
         # Current Time (M)
         api.set_button_live_minute(deck_id, _page(ui), button.index, True)
     else:
-        api.set_button_live_time(deck_id, _page(ui), button.index, False)
+        # We consider it's a sensor
+        api.set_button_sensor(deck_id, _page(ui), button.index, True, [ui.information.itemText(i) for i in range(ui.information.count())], index)
 
     ui.text.setText(api.get_button_text(deck_id, _page(ui), button.index))
 
@@ -306,6 +307,8 @@ def start(_exit: bool = False) -> None:
     menu.addAction(action_exit)
 
     tray.setContextMenu(menu)
+
+    ui.information.addItems(api.get_sensors_list())
 
     ui.text.textChanged.connect(partial(queue_text_change, ui))
     ui.command.textChanged.connect(partial(update_button_command, ui))
