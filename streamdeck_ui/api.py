@@ -29,20 +29,24 @@ def _run_process(command: str):
 
     pid = os.fork()
     if pid > 0:
+        # in main process: wait for first fork
+        pid2, status = os.waitpid(pid, 0)
+        if (status != 0):
+            print("fork #1 failed: return code: {}".format(status))
         return
 
     os.setsid()
-    # do second fork
+    # in first fork: do second fork
     try:
         pid = os.fork()
         if pid > 0:
-            # exit from second parent, without atexit
+            # in first fork: exit without atexit handler
             os._exit(0)
     except OSError as e:
-        print ("fork #2 failed: %d (%s)".format(e.errno, e.strerror))
+        print ("fork #2 failed: {} ({})".format(e.errno, e.strerror))
         os._exit(1)
 
-    # Detach the process, so killing StreamDeck doesn't take it with
+    # in second fork: Detach the process, so killing StreamDeck doesn't take it with
     args = shlex.split(command)
     os.execv(args[0], args)
 
