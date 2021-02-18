@@ -1,5 +1,6 @@
 """Defines the Python API for interacting with the StreamDeck Configuration UI"""
 import json
+import psutil
 import sys
 import os
 from pathlib import Path
@@ -489,6 +490,32 @@ def _render_key_image(deck, icon: str = "", text: str = "", information: str = "
         draw.text(label_pos, text=text, font=true_font, fill="white")
 
     return ImageHelpers.PILHelper.to_native_format(deck, image)
+
+
+def get_sensors_list():
+    _l = []
+    for sensor, sub_sensors in psutil.sensors_temperatures().items():
+        # Small issue when having multiple NVME drives, ignoring them for the moment
+        if not sensor == "nvme":
+            for elem in sub_sensors:
+                _l.append("Sensor:" + str(sensor) + ":" + elem.label)
+    return _l
+
+
+def _get_sensor(sensor_list: list, index: int):
+    sp_key = sensor_list[index].split(":")
+    if sp_key[0] == "Sensor":
+        sensor = psutil.sensors_temperatures()[sp_key[1]]
+        for i in sensor:
+            if i.label == sp_key[2]:
+                return str(i.current)
+    return ""
+
+
+def set_button_sensor(deck_id: str, page: int, button: int, start: bool, sensor_list: list, index: int) -> None:
+    """Set the button to display live time every second"""
+    _button_state(deck_id, page, button)["font_size"] = 28
+    _set_button_live_info(deck_id, page, button, start, _get_sensor, [sensor_list, index])
 
 
 if os.path.isfile(STATE_FILE):
